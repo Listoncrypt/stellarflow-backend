@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { sendApiError } from "../lib/apiError.js";
 import prisma from "../lib/prisma";
 import { cacheMiddleware } from "../cache/CacheMiddleware";
 import { CACHE_CONFIG, CACHE_KEYS } from "../config/redis.config";
@@ -92,31 +93,29 @@ router.get(
     let since: Date | undefined;
     let until: Date | undefined;
 
-    if (fromParam || toParam) {
-      if (fromParam) {
-        since = new Date(fromParam);
-        if (isNaN(since.getTime())) {
-          res
-            .status(400)
-            .json({ success: false, error: "Invalid 'from' date" });
-          return;
-        }
+if (fromParam || toParam) {
+    if (fromParam) {
+      since = new Date(fromParam);
+      if (isNaN(since.getTime())) {
+        sendApiError(res, 400, "BAD_REQUEST", "Invalid 'from' date");
+        return;
       }
-      if (toParam) {
-        until = new Date(toParam);
-        if (isNaN(until.getTime())) {
-          res.status(400).json({ success: false, error: "Invalid 'to' date" });
-          return;
-        }
+    }
+    if (toParam) {
+      until = new Date(toParam);
+      if (isNaN(until.getTime())) {
+        sendApiError(res, 400, "BAD_REQUEST", "Invalid 'to' date");
+        return;
       }
-    } else {
-      const range = rangeParam ?? "7d";
-      const days = RANGE_MAP[range];
-      if (!days) {
-        res.status(400).json({
-          success: false,
-          error: `Invalid range. Supported values: ${Object.keys(RANGE_MAP).join(", ")}`,
-        });
+    }
+  } else {
+    const range = rangeParam ?? "7d";
+    const days = RANGE_MAP[range];
+    if (!days) {
+      sendApiError(res, 400, "BAD_REQUEST", `Invalid range. Supported values: ${Object.keys(RANGE_MAP).join(", ")}`);
+      return;
+    }
+  }
         return;
       }
       since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -163,7 +162,22 @@ router.get(
         error: error instanceof Error ? error.message : "Internal server error",
       });
     }
-  },
+res.json({
+      success: true,
+      asset,
+      range: rangeParam || "custom",
+      data: rows.map(
+        (r: { timestamp: Date; rate: unknown; source: string }) => ({
+          timestamp: r.timestamp.toISOString(),
+          rate: Number(r.rate),
+          source: r.source,
+        }),
+      ),
+    });
+  } catch (error) {
+    sendApiError(res, 500, "INTERNAL_SERVER_ERROR", typeof (error instanceof Error ? error.message : "Internal server error") === "string" ? String(error instanceof Error ? error.message : "Internal server error") : undefined);
+  }
+},
 );
 
 export default router;

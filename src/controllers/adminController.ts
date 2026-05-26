@@ -96,7 +96,7 @@ export const getRelayerRegistry = async (req: Request, res: Response) => {
  */
 export const getRelayerRegistryById = async (req: Request, res: Response) => {
   try {
-    const relayerId = parseInt(req.params.relayerId);
+    const relayerId = parseInt(String(req.params.relayerId));
 
     if (isNaN(relayerId)) {
       return res.status(400).json({
@@ -151,7 +151,8 @@ export const upsertRelayerRegistry = async (req: Request, res: Response) => {
     if (!relayerId || !contactName || !email || !organizationName) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields: relayerId, contactName, email, organizationName",
+        error:
+          "Missing required fields: relayerId, contactName, email, organizationName",
       });
     }
 
@@ -212,18 +213,22 @@ export const upsertRelayerRegistry = async (req: Request, res: Response) => {
     // Log audit event
     const adminInfo = extractAdminInfo(req);
     await logAuditEvent({
-      eventType: isUpdate ? "RELAYER_REGISTRY_UPDATED" : "RELAYER_REGISTRY_CREATED",
+      eventType: isUpdate
+        ? "RELAYER_REGISTRY_UPDATED"
+        : "RELAYER_REGISTRY_CREATED",
       actionType: "RELAYER_REGISTRY",
       relatedId: registry.id,
       actorPublicKey: adminInfo.publicKey,
       actorName: adminInfo.name,
       actorRole: adminInfo.role,
-      eventDetails: `Relayer registry ${isUpdate ? 'updated' : 'created'} for relayer ID ${relayerId}`,
-      previousState: isUpdate ? JSON.stringify({
-        contactName: existing.contactName,
-        email: existing.email,
-        organizationName: existing.organizationName,
-      }) : null,
+      eventDetails: `Relayer registry ${isUpdate ? "updated" : "created"} for relayer ID ${relayerId}`,
+      previousState: isUpdate
+        ? JSON.stringify({
+            contactName: existing.contactName,
+            email: existing.email,
+            organizationName: existing.organizationName,
+          })
+        : undefined,
       newState: JSON.stringify({
         contactName: registry.contactName,
         email: registry.email,
@@ -236,7 +241,7 @@ export const upsertRelayerRegistry = async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: registry,
-      message: `Relayer registry entry ${isUpdate ? 'updated' : 'created'} successfully`,
+      message: `Relayer registry entry ${isUpdate ? "updated" : "created"} successfully`,
     });
   } catch (error) {
     console.error("[Admin] Failed to upsert relayer registry:", error);
@@ -253,7 +258,7 @@ export const upsertRelayerRegistry = async (req: Request, res: Response) => {
  */
 export const deleteRelayerRegistry = async (req: Request, res: Response) => {
   try {
-    const relayerId = parseInt(req.params.relayerId);
+    const relayerId = parseInt(String(req.params.relayerId));
 
     if (isNaN(relayerId)) {
       return res.status(400).json({
@@ -297,7 +302,7 @@ export const deleteRelayerRegistry = async (req: Request, res: Response) => {
         email: existing.email,
         organizationName: existing.organizationName,
       }),
-      newState: null,
+      newState: undefined,
       ipAddress: adminInfo.ipAddress,
       userAgent: adminInfo.userAgent,
     });

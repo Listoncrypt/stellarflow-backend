@@ -10,6 +10,18 @@ import {
 import { updateSecretKey } from "../services/secretManager";
 import { appConfig } from "../config/configWatcher";
 import { refreshWhitelistCache } from "../middleware/rateLimitMiddleware";
+import {
+  getRelayerRegistry,
+  getRelayerRegistryById,
+} from "../controllers/adminController";
+
+const CONFIG_PATH = path.resolve(process.cwd(), "config.json");
+
+const rateLimitUpdateSchema = Joi.object({
+  windowMs: Joi.number().integer().min(1000).max(86400000).optional(),
+  maxRequests: Joi.number().integer().min(1).max(100000).optional(),
+  enabled: Joi.boolean().optional(),
+}).unknown(false);
 
 const router = Router();
 
@@ -261,7 +273,7 @@ router.put("/rate-limit", async (req, res) => {
     return res.status(400).json({
       success: false,
       error: "Validation failed",
-      details: error.details.map((d) => d.message),
+      details: error.details.map((d: Joi.ValidationErrorItem) => d.message),
     });
   }
 

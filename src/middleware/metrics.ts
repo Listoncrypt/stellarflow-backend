@@ -7,7 +7,7 @@ export const register = new promClient.Registry();
 // Add default metrics (e.g., memory, CPU)
 promClient.collectDefaultMetrics({
   register,
-  labels: { app: 'stellarflow-backend' },
+  labels: { app: "stellarflow-backend" },
 });
 
 // Create a custom histogram for HTTP request durations
@@ -26,6 +26,19 @@ export const httpRequestsTotal = new promClient.Counter({
   labelNames: ["method", "route", "status_code"],
 });
 register.registerMetric(httpRequestsTotal);
+
+// Custom idempotency metrics
+export const activeIdempotencyKeys = new promClient.Gauge({
+  name: "idempotency_keys_active",
+  help: "Number of active idempotency keys currently stored",
+});
+register.registerMetric(activeIdempotencyKeys);
+
+export const evictedIdempotencyKeys = new promClient.Counter({
+  name: "idempotency_keys_evicted_total",
+  help: "Total number of evicted or expired idempotency keys",
+});
+register.registerMetric(evictedIdempotencyKeys);
 
 export const metricsMiddleware = (
   req: Request,

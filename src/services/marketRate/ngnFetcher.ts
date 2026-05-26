@@ -4,7 +4,6 @@ import {
   MarketRateFetcher,
   MarketRate,
   RawApiResponse,
-  calculateWeightedAverage,
   filterOutliers,
 } from "./types";
 import { withRetry } from "../../utils/retryUtil.js";
@@ -168,12 +167,12 @@ export class NGNRateFetcher implements MarketRateFetcher {
           { maxRetries: 3, retryDelay: 1000 },
         );
 
-          rawResponses.push({
-            provider: "CoinGecko",
-            endpoint: this.coinGeckoUrl,
-            payload: coinGeckoResponse.data,
-            receivedAt: new Date(),
-          });
+        rawResponses.push({
+          provider: "CoinGecko",
+          endpoint: this.coinGeckoUrl,
+          payload: coinGeckoResponse.data,
+          receivedAt: new Date(),
+        });
 
         const usd = coinGeckoResponse.data.stellar?.usd;
         if (typeof usd === "number" && usd > 0) {
@@ -191,7 +190,9 @@ export class NGNRateFetcher implements MarketRateFetcher {
         }
       }
     } catch (error) {
-      this.logger.debug("VTpass + CoinGecko XLM/USD failed", { error: error instanceof Error ? error.message : error });
+      this.logger.debug("VTpass + CoinGecko XLM/USD failed", {
+        error: error instanceof Error ? error.message : error,
+      });
     }
 
     try {
@@ -230,7 +231,9 @@ export class NGNRateFetcher implements MarketRateFetcher {
         });
       }
     } catch (error) {
-      this.logger.debug("CoinGecko direct NGN failed", { error: error instanceof Error ? error.message : error });
+      this.logger.debug("CoinGecko direct NGN failed", {
+        error: error instanceof Error ? error.message : error,
+      });
     }
 
     try {
@@ -298,15 +301,17 @@ export class NGNRateFetcher implements MarketRateFetcher {
         }
       }
     } catch (error) {
-      this.logger.debug("CoinGecko + ExchangeRate API (NGN) failed", { error: error instanceof Error ? error.message : error });
+      this.logger.debug("CoinGecko + ExchangeRate API (NGN) failed", {
+        error: error instanceof Error ? error.message : error,
+      });
     }
 
     if (prices.length === 0) {
       const error = new Error("All NGN rate sources failed");
-      this.logger.fetcherError(
+      (this.logger as any).fetcherError(
         error,
         "All price sources failed - no rates obtained",
-        { attemptedSources: 3, pricesLength: prices.length }
+        { attemptedSources: 3, pricesLength: prices.length },
       );
       throw error;
     }
@@ -318,14 +323,13 @@ export class NGNRateFetcher implements MarketRateFetcher {
     const filteredPrices = prices.filter((price) =>
       filteredRateValues.includes(price.rate),
     );
-    const pricesToUse =
-      filteredPrices.length >= 3 ? filteredPrices : prices;
+    const pricesToUse = filteredPrices.length >= 3 ? filteredPrices : prices;
 
     if (pricesToUse.length < 3) {
       const error = new Error(
         `Need at least 3 price sources for median calculation, got ${pricesToUse.length}`,
       );
-      this.logger.fetcherError(error.message, {
+      (this.logger as any).fetcherError(error.message, {
         attemptedSources: 3,
         pricesLength: pricesToUse.length,
       });
@@ -353,10 +357,17 @@ export class NGNRateFetcher implements MarketRateFetcher {
   async isHealthy(): Promise<boolean> {
     try {
       const rate = await this.fetchRate();
-      this.logger.info("Health check passed", { rate: rate.rate, source: rate.source });
+      this.logger.info("Health check passed", {
+        rate: rate.rate,
+        source: rate.source,
+      });
       return rate.rate > 0;
     } catch (error) {
-      this.logger.error("Health check failed", undefined, error instanceof Error ? error : new Error(String(error)));
+      this.logger.error(
+        "Health check failed",
+        undefined,
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return false;
     }
   }

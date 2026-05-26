@@ -1,5 +1,4 @@
 import { createServer } from "http";
-import compression from "compression";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -22,7 +21,6 @@ import { validateEnv } from "./utils/envValidator";
 import { enableGlobalLogMasking } from "./utils/logMasker";
 import { hourlyAverageService } from "./services/hourlyAverageService";
 import { getRegionalHealthService } from "./services/regionalHealthService";
-import { metricsMiddleware, metricsEndpoint } from "./middleware/metrics";
 import { watchConfig } from "./config/configWatcher";
 import { startEnvFileWatcher } from "./config/envFileWatcher";
 import { validateDatabaseSchema } from "./utils/dbValidator";
@@ -31,6 +29,10 @@ import { setupAxiosTracing } from "./lib/tracing";
 import { registerTracingShutdownHandlers } from "./utils/shutdownTracing";
 import { providerSecretRotationService } from "./services/providerSecretRotationService";
 import { priceAggregatorService } from "./services/priceAggregatorService";
+import {
+  startIdempotencyEvictionWorker,
+  stopIdempotencyEvictionWorker,
+} from "./db/idempotency";
 
 // Load environment variables
 dotenv.config();
@@ -295,6 +297,7 @@ const shutdown = async (signal: "SIGINT" | "SIGTERM"): Promise<void> => {
     hourlyAverageService.stop();
     priceAggregatorService.stop();
     providerSecretRotationService.stop();
+    stopIdempotencyEvictionWorker();
     stopConfigWatcher();
     stopEnvFileWatcher?.();
 
@@ -409,6 +412,19 @@ httpServer.listen(PORT, () => {
       "Gas balance monitor service not started:",
       err instanceof Error ? err.message : err,
     );
+  }
+
+  // Start background eviction worker for idempotency keys
+  try {
+    const evictionIntervalMs = process.env.IDEMPOTENCY_EVICTION_INTERVAL_MS
+      ? parseInt(process.env.IDEMPOTENCY_EVICTION_INTERVAL_MS, 10)
+      : 3600000;
+    startIdempotencyEvictionWorker(
+      isNaN(evictionIntervalMs) ? 3600000 : evictionIntervalMs,
+    );
+    console.log(`⏱️ Idempotency key eviction worker started`);
+  } catch (err) {
+    console.warn("Idempotency eviction worker not started:", err);
   }
 });
 

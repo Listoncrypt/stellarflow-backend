@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { multiSigService, SignaturePayload } from "../services/multiSigService";
+import { idempotencyMiddleware } from "../middleware/idempotencyMiddleware";
 import { isLockdownError } from "../state/appState";
 import {
   sanitizeMultiSigRequest,
@@ -17,6 +18,7 @@ const router = express.Router();
  */
 router.post(
   "/multi-sig/request",
+  idempotencyMiddleware,
   sanitizeMultiSigRequest,
   async (req: Request, res: Response) => {
     try {

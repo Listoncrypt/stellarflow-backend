@@ -5,15 +5,20 @@ import Joi from "joi";
  * These are the whitelisted currencies allowed in the system.
  * Add more as needed.
  */
-export const SUPPORTED_CURRENCIES = ["NGN", "GHS", "KES", "ZAR", "XLM"] as const;
+export const SUPPORTED_CURRENCIES = [
+  "NGN",
+  "GHS",
+  "KES",
+  "ZAR",
+  "XLM",
+] as const;
 
 /**
  * Regular expression for i128-compatible numbers.
  * i128 range: -170141183460469231731687303715884105728 to 170141183460469231731687303715884105727
  * Matches positive/negative numbers with optional decimals.
  */
-const I128_PATTERN =
-  /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+const I128_PATTERN = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
 
 /**
  * Validates that a string represents a valid i128-compatible number.
@@ -31,7 +36,9 @@ export function isValidI128String(value: string): boolean {
   }
 
   try {
-    const num = BigInt(value.split(".")[0]); // Take integer part only
+    const firstPart = value.split(".")[0];
+    if (firstPart === undefined) return false;
+    const num = BigInt(firstPart);
     const MAX_I128 = BigInt("170141183460469231731687303715884105727");
     const MIN_I128 = BigInt("-170141183460469231731687303715884105728");
 
@@ -47,13 +54,10 @@ export function isValidI128String(value: string): boolean {
  */
 export const priceSchema = Joi.alternatives().try(
   Joi.number().positive().required(),
-  Joi.string()
-    .pattern(I128_PATTERN)
-    .required()
-    .messages({
-      "string.pattern.base":
-        "Price must be a valid i128-compatible number (e.g., '123.45', '1e5')",
-    }),
+  Joi.string().pattern(I128_PATTERN).required().messages({
+    "string.pattern.base":
+      "Price must be a valid i128-compatible number (e.g., '123.45', '1e5')",
+  }),
 );
 
 /**

@@ -4,8 +4,6 @@ import { MarketRateService } from "../services/marketRate";
 import { cacheMiddleware, invalidateCache } from "../cache/CacheMiddleware";
 import { CACHE_CONFIG, CACHE_KEYS } from "../config/redis.config";
 import { isLockdownError } from "../state/appState";
-import { sanitizeMarketRateQuery } from "../middleware/payloadSanitizer";
-
 const marketRateService = new MarketRateService();
 
 const router = Router();
@@ -15,7 +13,8 @@ router.get(
   "/rate/:currency",
   cacheMiddleware({
     ttl: CACHE_CONFIG.ttl.marketRates,
-    keyGenerator: (req) => CACHE_KEYS.marketRates.single(req.params.currency),
+    keyGenerator: (req) =>
+      CACHE_KEYS.marketRates.single(String(req.params.currency)),
   }),
   getRate,
 );
@@ -100,7 +99,7 @@ router.post(
   invalidateCache("market-rates:*"),
   async (req, res) => {
     try {
-      const reviewId = Number.parseInt(req.params.id, 10);
+      const reviewId = Number.parseInt(String(req.params.id), 10);
       if (!Number.isFinite(reviewId)) {
         res.status(400).json({
           success: false,
@@ -138,7 +137,7 @@ router.post(
   invalidateCache("market-rates:*"),
   async (req, res) => {
     try {
-      const reviewId = Number.parseInt(req.params.id, 10);
+      const reviewId = Number.parseInt(String(req.params.id), 10);
       if (!Number.isFinite(reviewId)) {
         res.status(400).json({
           success: false,

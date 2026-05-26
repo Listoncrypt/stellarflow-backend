@@ -33,8 +33,12 @@ export class SequenceManager {
     return await this.mutex.runExclusive(async () => {
       try {
         if (this.currentSequence === null) {
-          console.info(`[SequenceManager] Fetching sequence from Horizon for ${address}...`);
-          const account = await stellarProvider.loadAccount(address);
+          console.info(
+            `[SequenceManager] Fetching sequence from Horizon for ${address}...`,
+          );
+          const account = await stellarProvider
+            .getServer()
+            .loadAccount(address);
           this.currentSequence = BigInt(account.sequenceNumber());
         } else {
           this.currentSequence += 1n;
@@ -54,7 +58,9 @@ export class SequenceManager {
    */
   public invalidate(_account?: string): void {
     this.currentSequence = null;
-    console.info("[SequenceManager] Sequence invalidated. Next call will fetch from Horizon.");
+    console.info(
+      "[SequenceManager] Sequence invalidated. Next call will fetch from Horizon.",
+    );
   }
 }
 

@@ -23,22 +23,6 @@ router.get("/relayers", async (req: Request, res: Response) => {
       },
     });
 
-    // Get all submitted multi-sig prices
-    const submittedPrices = await prisma.multiSigPrice.findMany({
-      where: {
-        status: "APPROVED",
-        submittedAt: { not: null },
-      },
-      include: {
-        multiSigSignatures: {
-          select: {
-            signerPublicKey: true,
-            signedAt: true,
-          },
-        },
-      },
-    });
-
     // Calculate statistics for each relayer
     const relayerStats = await Promise.all(
       signers.map(
@@ -152,7 +136,7 @@ router.get(
     keyGenerator: (req) => {
       const dateParam = req.query.date as string;
       const targetDate = dateParam ? new Date(dateParam) : new Date();
-      const dateStr = targetDate.toISOString().split("T")[0];
+      const dateStr = targetDate.toISOString().split("T")[0] ?? "";
       return CACHE_KEYS.stats.volume(dateStr);
     },
   }),

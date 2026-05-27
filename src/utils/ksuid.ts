@@ -22,8 +22,10 @@ const TIME_LEN = 10; // chars for 48-bit timestamp
 const RANDOM_LEN = 16; // chars for 80-bit random
 
 // Monotonicity guard: if two IDs are generated in the same ms, increment random
+// Typed as Uint8Array (unparameterized) to avoid TS5.x ArrayBuffer/SharedArrayBuffer mismatch
 let lastMs = -1;
-let lastRandom = new Uint8Array(10);
+// eslint-disable-next-line prefer-const
+let lastRandom: Uint8Array = new Uint8Array(10);
 
 function encodeTime(ms: number): string {
   let t = ms;
@@ -51,17 +53,29 @@ function encodeRandom(bytes: Uint8Array): string {
   return result;
 }
 
+/** Copy bytes into a fresh Uint8Array and increment the last non-0xFF byte. */
 function incrementRandom(bytes: Uint8Array): Uint8Array {
-  const next = new Uint8Array(bytes);
+  const next = new Uint8Array(bytes.length);
+  next.set(bytes);
   for (let i = next.length - 1; i >= 0; i--) {
-    if (next[i]! < 255) {
-      next[i]!++;
+    if ((next[i] as number) < 255) {
+      (next as Uint8Array)[i] = (next[i] as number) + 1;
       return next;
     }
-    next[i] = 0;
+    (next as Uint8Array)[i] = 0;
   }
   // Overflow — all bytes were 0xFF; wrap around (extremely unlikely)
   return next;
+}
+
+/** Copy randomBytes output into a clean Uint8Array backed by a plain ArrayBuffer. */
+function freshRandom(n: number): Uint8Array {
+  const raw = randomBytes(n);
+  const out = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    (out as Uint8Array)[i] = raw[i] as number;
+  }
+  return out;
 }
 
 /**
@@ -75,7 +89,7 @@ export function generateKsuid(): string {
     lastRandom = incrementRandom(lastRandom);
   } else {
     lastMs = ms;
-    lastRandom = Uint8Array.from(randomBytes(10));
+    lastRandom = freshRandom(10);
   }
 
   return encodeTime(ms) + encodeRandom(lastRandom);

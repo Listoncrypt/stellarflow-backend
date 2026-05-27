@@ -85,10 +85,10 @@ export function updateActiveKeysMetric(): void {
         expiresAt: { gte: new Date() },
       },
     })
-    .then((count) => {
+    .then((count: number) => {
       activeIdempotencyKeys.set(count);
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.warn("[Idempotency] Failed to update active keys metric:", err);
     });
 }

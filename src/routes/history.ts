@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { sendApiError } from "../lib/apiError.js";
 import prisma from "../lib/prisma";
 import { cacheMiddleware } from "../cache/CacheMiddleware";
@@ -78,13 +78,13 @@ router.get(
   "/:asset",
   cacheMiddleware({
     ttl: CACHE_CONFIG.ttl.history,
-    keyGenerator: (req) => {
+    keyGenerator: (req: Request) => {
       const asset = String(req.params.asset).toUpperCase();
       const range = (req.query.range as string) || "7d";
       return CACHE_KEYS.history.asset(asset, range);
     },
   }),
-  async (req, res) => {
+  async (req: Request, res) => {
     const asset = String(req.params.asset).toUpperCase();
     const rangeParam = req.query.range as string;
     const fromParam = req.query.from as string;
@@ -93,29 +93,26 @@ router.get(
     let since: Date | undefined;
     let until: Date | undefined;
 
-if (fromParam || toParam) {
-    if (fromParam) {
-      since = new Date(fromParam);
-      if (isNaN(since.getTime())) {
-        sendApiError(res, 400, "BAD_REQUEST", "Invalid 'from' date");
-        return;
+    if (fromParam || toParam) {
+      if (fromParam) {
+        since = new Date(fromParam);
+        if (isNaN(since.getTime())) {
+          sendApiError(res, 400, "BAD_REQUEST", "Invalid 'from' date");
+          return;
+        }
       }
-    }
-    if (toParam) {
-      until = new Date(toParam);
-      if (isNaN(until.getTime())) {
-        sendApiError(res, 400, "BAD_REQUEST", "Invalid 'to' date");
-        return;
+      if (toParam) {
+        until = new Date(toParam);
+        if (isNaN(until.getTime())) {
+          sendApiError(res, 400, "BAD_REQUEST", "Invalid 'to' date");
+          return;
+        }
       }
-    }
-  } else {
-    const range = rangeParam ?? "7d";
-    const days = RANGE_MAP[range];
-    if (!days) {
-      sendApiError(res, 400, "BAD_REQUEST", `Invalid range. Supported values: ${Object.keys(RANGE_MAP).join(", ")}`);
-      return;
-    }
-  }
+    } else {
+      const range = rangeParam ?? "7d";
+      const days = RANGE_MAP[range];
+      if (!days) {
+        sendApiError(res, 400, "BAD_REQUEST", `Invalid range. Supported values: ${Object.keys(RANGE_MAP).join(", ")}`);
         return;
       }
       since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -153,31 +150,14 @@ if (fromParam || toParam) {
             timestamp: r.timestamp.toISOString(),
             rate: Number(r.rate),
             source: r.source,
-          }),
+          })
         ),
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
-      });
+      const errorMsg = error instanceof Error ? error.message : "Internal server error";
+      sendApiError(res, 500, "INTERNAL_SERVER_ERROR", errorMsg);
     }
-res.json({
-      success: true,
-      asset,
-      range: rangeParam || "custom",
-      data: rows.map(
-        (r: { timestamp: Date; rate: unknown; source: string }) => ({
-          timestamp: r.timestamp.toISOString(),
-          rate: Number(r.rate),
-          source: r.source,
-        }),
-      ),
-    });
-  } catch (error) {
-    sendApiError(res, 500, "INTERNAL_SERVER_ERROR", typeof (error instanceof Error ? error.message : "Internal server error") === "string" ? String(error instanceof Error ? error.message : "Internal server error") : undefined);
   }
-},
 );
 
 export default router;

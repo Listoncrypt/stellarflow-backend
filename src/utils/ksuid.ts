@@ -75,7 +75,7 @@ export function generateKsuid(): string {
     lastRandom = incrementRandom(lastRandom);
   } else {
     lastMs = ms;
-    lastRandom = new Uint8Array(randomBytes(10));
+    lastRandom = Uint8Array.from(randomBytes(10));
   }
 
   return encodeTime(ms) + encodeRandom(lastRandom);

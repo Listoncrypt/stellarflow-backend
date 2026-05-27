@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { SorobanRpc, xdr } from "@stellar/stellar-sdk";
+import { rpc, xdr } from "@stellar/stellar-sdk";
 
 dotenv.config();
 
@@ -61,7 +61,7 @@ export class ContractSanityCheckService {
     );
 
     try {
-      const server = new SorobanRpc.Server(this.rpcUrl, {
+      const server = new rpc.Server(this.rpcUrl, {
         allowHttp: this.NETWORK === "TESTNET",
       });
 
@@ -117,7 +117,7 @@ export class ContractSanityCheckService {
    * This is a low-cost read operation that checks if the contract is responsive
    */
   private async tryGetVersion(
-    server: SorobanRpc.Server,
+    server: rpc.Server,
   ): Promise<{ success: boolean; version?: string; error?: string }> {
     try {
       // Attempt to read a 'version' function from the contract
@@ -150,7 +150,7 @@ export class ContractSanityCheckService {
    * This is a fallback method if version read is not available
    */
   private async tryIsActive(
-    server: SorobanRpc.Server,
+    server: rpc.Server,
   ): Promise<{ success: boolean; isActive?: boolean; error?: string }> {
     try {
       const contractAddress = this.CONTRACT_ID;
@@ -158,7 +158,7 @@ export class ContractSanityCheckService {
       // Try to get contract ledger data - if it exists, contract is active
       const result = await server.getContractData(
         contractAddress,
-        xdr.ScVal.scvLedgerKeyContractCode(),
+        xdr.ScVal.scvVoid(),
       );
 
       // If we get a response, the contract exists and is active

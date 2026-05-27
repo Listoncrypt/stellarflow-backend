@@ -117,7 +117,7 @@ router.post(
       sendApiError(
         res,
         status,
-        status === 403 ? "LOCKDOWN_ACTIVE" : "INTERNAL_SERVER_ERROR",
+        status === 423 ? "LOCKDOWN_ACTIVE" : "INTERNAL_SERVER_ERROR",
         error instanceof Error ? error.message : "Failed to approve price review",
       );
     }

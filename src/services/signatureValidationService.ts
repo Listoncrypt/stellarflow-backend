@@ -515,8 +515,10 @@ export class SignatureValidationService {
     ipAddress?: string;
     userAgent?: string;
   }): Promise<void> {
+    const { generateKsuid } = require("../utils/ksuid");
     await prisma.auditLog.create({
       data: {
+        id: generateKsuid(),
         eventType: event.eventType,
         actionType: event.actionType,
         relatedId: event.relatedId,

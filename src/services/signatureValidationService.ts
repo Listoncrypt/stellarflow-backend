@@ -455,7 +455,7 @@ export class SignatureValidationService {
    * Verify all signatures for a consensus request
    */
   private async verifyAllSignatures(consensus: any): Promise<any[]> {
-    const validSignatures = [];
+    const validSignatures: any[] = [];
 
     for (const sig of consensus.pendingSignatures) {
       const isValid = await this.validateSignature(

@@ -30,6 +30,17 @@ export class SorobanEventListener {
     this.oraclePublicKey = ""; // Initialized in start()
     this.pollIntervalMs = pollIntervalMs;
 
+    // Validate that a secret key is available at construction time so tests
+    // and production startup fail fast with a clear message.
+    const secretKey =
+      process.env.ORACLE_SECRET_KEY || process.env.SOROBAN_ADMIN_SECRET;
+    if (!secretKey) {
+      throw new Error(
+        "Stellar secret key not found in environment variables. " +
+          "Set ORACLE_SECRET_KEY or SOROBAN_ADMIN_SECRET.",
+      );
+    }
+
     // Use the shared StellarProvider so failover state is shared across all
     // services rather than each managing its own Horizon URL.
     this.server = stellarProvider.getServer();

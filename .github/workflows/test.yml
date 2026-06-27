@@ -1,0 +1,63 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+      - name: Build WASM
+        run: cargo build --target wasm32v1-none --release
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Unit tests
+        run: cargo test --lib -- --skip proptest_tests --skip differential_fuzz --skip integration_tests
+
+  property-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+      - name: Build WASM
+        run: cargo build --target wasm32v1-none --release
+      - name: Property-based tests (10,000 iterations per property)
+        run: cargo test proptest_tests -- --nocapture
+        timeout-minutes: 30
+
+  differential-fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Differential fuzzing (1,000,000 iterations)
+        run: cargo test differential_fuzz -- --nocapture
+        timeout-minutes: 30
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+      - name: Build WASM
+        run: cargo build --target wasm32v1-none --release
+      - name: Cross-contract integration tests
+        run: cargo test integration_tests -- --nocapture
+      - name: Test
+        run: cargo test
+      - name: Storage baseline regression check
+        run: cargo test --package sorostream-stream -- storage_bench::check_storage_baseline_regression --nocapture

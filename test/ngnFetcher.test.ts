@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import axios from "axios";
+import { httpClient } from "../src/lib/httpClient";
 import { NGNRateFetcher } from "../src/services/marketRate/ngnFetcher";
 
 async function run() {
   const originalGet = axios.get;
+  const originalHttpClientGet = httpClient.get;
   const savedEnv = {
     VTPASS_API_KEY: process.env.VTPASS_API_KEY,
     VTPASS_PUBLIC_KEY: process.env.VTPASS_PUBLIC_KEY,
@@ -19,7 +21,7 @@ async function run() {
 
     const fetcher = new NGNRateFetcher();
 
-    axios.get = (async (url: string) => {
+    const mockGet = (async (url: string) => {
       if (url.includes("service-variations")) {
         return {
           data: {
@@ -65,6 +67,9 @@ async function run() {
       throw new Error(`Unexpected URL: ${url}`);
     }) as typeof axios.get;
 
+    axios.get = mockGet;
+    httpClient.get = mockGet as typeof httpClient.get;
+
     const rate = await fetcher.fetchRate();
     const expectedRate = 300;
 
@@ -82,6 +87,7 @@ async function run() {
     );
   } finally {
     axios.get = originalGet;
+    httpClient.get = originalHttpClientGet;
     for (const [key, val] of Object.entries(savedEnv)) {
       if (val === undefined) {
         delete process.env[key];

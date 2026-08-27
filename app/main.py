@@ -53,6 +53,18 @@ async def health() -> JSONResponse:
     )
 
 
+@app.get("/health/db")
+async def health_db() -> JSONResponse:
+    """Return database connection pool status and ping heartbeat health."""
+    from app.db.health import DatabaseHealthInspector
+
+    inspector = DatabaseHealthInspector()
+    result = await inspector.check_health()
+    status_code = 200 if result.get("status") == "healthy" else 503
+    return JSONResponse(result, status_code=status_code)
+
+
+
 @app.post("/proof/verify", response_model=ProofVerificationResponse)
 async def verify_proof(request: ProofVerificationRequest) -> ProofVerificationResponse:
     """Verify a single shielded transaction proof.

@@ -98,12 +98,14 @@ class TestIndexUsageTelemetryRecordIndexUsage:
             ("public", "orders", "orders_pkey", 500, 2000, 2000),
         ]
         
-        telemetry = IndexUsageTelemetry(mock_conn)
-        telemetry.record_index_usage()
-        
-        assert len(telemetry._index_stats) == 2
-        assert "public.users.users_pkey" in telemetry._index_stats
-        assert "public.orders.orders_pkey" in telemetry._index_stats
+        with patch("database.connection.psycopg2", MagicMock()):
+            telemetry = IndexUsageTelemetry(mock_conn)
+            telemetry.record_index_usage()
+            
+            assert len(telemetry._index_stats) == 2
+            assert "public.users.users_pkey" in telemetry._index_stats
+            assert "public.orders.orders_pkey" in telemetry._index_stats
+
 
 
 # ---------------------------------------------------------------------------

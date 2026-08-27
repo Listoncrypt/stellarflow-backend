@@ -54,3 +54,9 @@ uvicorn[standard]>=0.24.0
 
 # Process pool executor for CPU-intensive ZK proof verification
 # (uses stdlib concurrent.futures, no extra package needed)
+
+# ---------------------------------------------------------------------------
+# Issue #785 — Database Connection Pool Tuning & Health Inspector
+# ---------------------------------------------------------------------------
+prometheus_client>=0.19.0
+

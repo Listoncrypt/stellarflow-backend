@@ -40,7 +40,7 @@ export interface QuoteStatus {
   fee: number;
   slippageBps: number;
   liveFeedRate: number;
-  feedSource: string;
+  feedSource: string | null;
   rateDeviationBps: number;
   status: string;
   expiresAt: Date;
@@ -493,7 +493,7 @@ export class FxConversionService {
     fee: unknown;
     slippageBps: number;
     liveFeedRate: unknown;
-    feedSource: string;
+    feedSource: string | null;
     rateDeviationBps: number;
     status: string;
     expiresAt: Date;

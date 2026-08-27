@@ -41,10 +41,10 @@ export class OhlcvAggregator {
         select: { rate: true, timestamp: true },
       });
       if (rows.length === 0) continue;
-      const open = rows[0].rate;
-      const close = rows[rows.length - 1].rate;
-      const high = rows.reduce((max, r) => (r.rate > max ? r.rate : max), rows[0].rate);
-      const low = rows.reduce((min, r) => (r.rate < min ? r.rate : min), rows[0].rate);
+      const open = rows[0]!.rate;
+      const close = rows[rows.length - 1]!.rate;
+      const high = rows.reduce((max, r) => (r.rate > max ? r.rate : max), rows[0]!.rate);
+      const low = rows.reduce((min, r) => (r.rate < min ? r.rate : min), rows[0]!.rate);
       const volume = rows.length; // Simple count as volume placeholder
 
       const timestamp = start;

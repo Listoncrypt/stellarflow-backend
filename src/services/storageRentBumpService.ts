@@ -112,12 +112,7 @@ export class StorageRentBumpService {
         
         const ttl = entry.liveUntilLedgerSeq - currentLedger;
         if (ttl < this.MIN_TTL_LEDGERS) {
-          const keyBase64 = entry.xdr.toXDR("base64"); // We could parse it back, but we can just use the returned key directly from entry.xdr if it was the LedgerKey. Wait, entry has key? No, `entry` has `key` which is xdr.LedgerKey ?
-          // In Soroban RPC 20+, `entry` contains the `xdr` of the ledger entry data.
-          // The request keys map 1:1, but the simplest is just to rebuild from the original keys.
-          // Wait, `getLedgerEntries` returns an array of `entries`. 
-          // Let's just blindly add all our keys to `keysToBump` if we notice ANY of them are below TTL.
-          keysToBump.push(xdr.LedgerKey.fromXDR(entry.key, "base64"));
+          keysToBump.push(xdr.LedgerKey.fromXDR(typeof (entry as any).key === "string" ? (entry as any).key : (entry as any).val, "base64"));
         }
       }
 
@@ -139,8 +134,9 @@ export class StorageRentBumpService {
         (sourceAccount, currentFee) => {
           return new TransactionBuilder(sourceAccount, {
             fee: currentFee.toString(),
-            networkPassphrase: stellarProvider.getNetworkPassphrase(),
+            networkPassphrase: (stellarProvider as any).getNetworkPassphrase?.() || process.env.STELLAR_NETWORK || "Test SDF Network ; July 2015",
           })
+
             .addOperation(
               Operation.extendFootprintTtl({
                 extendTo: this.EXTEND_TO_LEDGERS,

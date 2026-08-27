@@ -37,10 +37,10 @@ export function governanceVoterCache() {
   return cacheMiddleware({
     ttl: CACHE_CONFIG.ttl.governance,
     keyGenerator: (req: Request) => {
-      const { account_id } = req.params;
+      const accountId = req.params.account_id as string;
       // Include query string in cache key so different filters don't collide
       const qs = new URLSearchParams(req.query as Record<string, string>).toString();
-      return CACHE_KEYS.governance.voter(`${account_id}:${qs}`);
+      return CACHE_KEYS.governance.voter(`${accountId}:${qs}`);
     },
   });
 }
@@ -170,9 +170,9 @@ export async function getVoterProfile(
 ): Promise<void> {
   try {
     // ── 1. Validate path param ──────────────────────────────────────────────
-    const { account_id } = req.params;
+    const accountId = req.params.account_id as string;
 
-    if (!account_id || !STELLAR_ACCOUNT_RE.test(account_id)) {
+    if (!accountId || !STELLAR_ACCOUNT_RE.test(accountId)) {
       sendApiError(
         res,
         400,
@@ -245,9 +245,9 @@ export async function getVoterProfile(
 
     // ── 3. Fetch data in parallel ────────────────────────────────────────────
     const [voteHistory, delegationTree, weightTrend] = await Promise.all([
-      getVoteHistory(account_id, { from: fromDate, to: toDate, limit, cursor }),
-      getDelegationTree(account_id),
-      getWeightTrend(account_id, trendDays),
+      getVoteHistory(accountId, { from: fromDate, to: toDate, limit, ...(cursor !== undefined ? { cursor } : {}) }),
+      getDelegationTree(accountId),
+      getWeightTrend(accountId, trendDays),
     ]);
 
     // ── 4. 404 if no voting activity at all ─────────────────────────────────
@@ -256,7 +256,7 @@ export async function getVoterProfile(
         res,
         404,
         "NOT_FOUND",
-        `No governance activity found for account ${account_id}.`,
+        `No governance activity found for account ${accountId}.`,
       );
       return;
     }
@@ -265,7 +265,7 @@ export async function getVoterProfile(
     res.json({
       success: true,
       data: {
-        accountId: account_id,
+        accountId: accountId,
         voteHistory,
         delegationTree,
         weightTrend,

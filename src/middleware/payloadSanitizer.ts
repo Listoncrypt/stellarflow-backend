@@ -316,3 +316,16 @@ export function logPayload(
     next();
   }
 }
+
+/**
+ * Multi-sig signature payload sanitizer.
+ * Validates and sanitizes signature payloads for multi-sig operations.
+ *
+ * Usage:
+ * router.post("/sign", sanitizeMultiSigSignaturePayload, handler);
+ */
+export const sanitizeMultiSigSignaturePayload = createPayloadSanitizer(
+  sanitizedPayloadSchema,
+  "MultiSigSignaturePayload",
+  false,
+);

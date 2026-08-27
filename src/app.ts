@@ -57,6 +57,7 @@ import analyticsRouter from "./routes/analytics";
 import zkRouter from "./routes/zk";
 import governanceRouter from "./routes/governance";
 import proofRouter from "./routes/proof";
+import sorobanRentEstimateRouter from "./routes/sorobanRentEstimate";
 import { sendApiError } from "./lib/apiError.js";
 
 dotenv.config();

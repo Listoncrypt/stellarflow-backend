@@ -150,7 +150,8 @@ export class StellarService {
 
     const rpcServer = stellarProvider.getRpcServer();
     const simulation = await rpcServer.simulateTransaction(transaction);
-    const prepared = rpcServer.assembleTransaction(transaction, simulation).build();
+    const prepared = (rpcServer as any).assembleTransaction(transaction, simulation).build();
+
     const signature = await signer.sign(prepared.hash());
     const keypair = Keypair.fromPublicKey(publicKey);
     prepared.signatures.push(

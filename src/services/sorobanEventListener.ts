@@ -9,8 +9,10 @@ import { logger } from "../utils/logger";
 import { parseBase64ToPositiveNumber } from "../serialization/helpers.js";
 import { verifyOrderFilledEvent } from "./orderFillVerificationService.js";
 import { ingestGovernanceVoteEvent } from "./voterHistoryService.js";
+import { getCacheWarmingWorker } from "./cacheWarmingWorker.js";
 
 dotenv.config();
+
 
 export interface ConfirmedPrice {
   currency: string;
@@ -131,7 +133,7 @@ export class SorobanEventListener {
 
           // Trigger cache warming on new price update
           const cacheWarmingWorker = getCacheWarmingWorker();
-          cacheWarmingWorker.onNewLedger(price.ledgerSeq).catch((err) => {
+          cacheWarmingWorker.onNewLedger(price.ledgerSeq).catch((err: unknown) => {
             logger.error("[EventListener] Cache warming failed:", err);
           });
         } catch (err) {

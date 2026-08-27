@@ -37,6 +37,8 @@ import { priceAggregatorService } from "./services/priceAggregatorService";
 import { contractSanityCheckService } from "./services/contractSanityCheckService";
 import { governanceTimelockService } from "./services/governanceTimelockService";
 import { storageRentBumpService } from "./services/storageRentBumpService";
+import { getRegionalHealthService } from "./services/regionalHealthService";
+import { redisOperationsWorker } from "./services/redisOperationsWorker";
 
 // Load environment variables
 dotenv.config();

@@ -124,9 +124,10 @@ export class SignatureValidationService {
 
     if (
       consensus.pendingSignatures.some(
-        (sig) => sig.adminPublicKey === adminSignature.adminPublicKey,
+        (sig: any) => sig.adminPublicKey === adminSignature.adminPublicKey,
       )
     ) {
+
       return {
         valid: false,
         canExecute: false,

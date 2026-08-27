@@ -20,6 +20,9 @@ async function run() {
   process.env.SIGNER_BACKEND = "local";
   delete process.env.ENCRYPTED_STELLAR_SECRET;
 
+  const { updateSecretKey } = await import("../src/services/secretManager");
+  updateSecretKey(testSecret, "startup");
+
   const { SorobanEventListener } =
     await import("../src/services/sorobanEventListener");
 

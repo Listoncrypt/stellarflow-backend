@@ -64,6 +64,13 @@ export class VaultManager {
   }
 
   /**
+   * Check if a key is registered.
+   */
+  public has(keyId: string): boolean {
+    return this._keys.has(keyId);
+  }
+
+  /**
    * Issue a scoped access token.
    */
   public openContext(scope: string): VaultContext {
